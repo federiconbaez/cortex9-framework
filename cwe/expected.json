@@ -1,0 +1,17 @@
+{
+  "CWE-416-use-after-free": "compile_time",
+  "CWE-415-double-free": "compile_time",
+  "CWE-787-oob-write-constant": "compile_time",
+  "CWE-787-oob-write-dynamic": "runtime_check",
+  "CWE-125-oob-read-header-length": "runtime_check",
+  "CWE-476-null-deref": "compile_time",
+  "CWE-457-uninitialized-variable": "compile_time",
+  "CWE-362-data-race": "compile_time",
+  "CWE-190-integer-overflow-size": "runtime_check",
+  "CWE-134-format-string": "compile_time",
+  "CWE-562-return-stack-address": "compile_time",
+  "CWE-843-type-confusion": "compile_time",
+  "CWE-120-copy-without-size-check": "runtime_check",
+  "CWE-401-memory-leak": "not_prevented",
+  "CWE-367-toctou": "not_prevented"
+}
