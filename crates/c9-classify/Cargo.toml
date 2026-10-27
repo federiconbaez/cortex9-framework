@@ -1,0 +1,22 @@
+[package]
+name = "c9-classify"
+description = "no_std IPv4 packet classifier shared by the in-kernel Rust module, the XDP oracle and the CLI"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[features]
+default = []
+std = []
+
+[dev-dependencies]
+proptest = "1"
+
+[[test]]
+name = "properties"
+required-features = ["std"]
+
+[[bin]]
+name = "c9-kmod-check"
+required-features = ["std"]

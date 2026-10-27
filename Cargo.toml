@@ -1,0 +1,22 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/c9-classify",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
+rust-version = "1.85"
+repository = "https://github.com/federiconbaez/cortex9-framework"
+
+[workspace.dependencies]
+c9-classify = { path = "crates/c9-classify" }
+c9-policy = { path = "crates/c9-policy" }
+c9-xdp = { path = "crates/c9-xdp" }
+c9-cgroup = { path = "crates/c9-cgroup" }
+c9-execguard = { path = "crates/c9-execguard" }
+
+[profile.release]
+debug = 1
