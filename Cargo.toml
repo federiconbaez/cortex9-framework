@@ -2,6 +2,7 @@
 resolver = "2"
 members = [
     "crates/c9-classify",
+    "crates/c9-policy",
 ]
 
 [workspace.package]

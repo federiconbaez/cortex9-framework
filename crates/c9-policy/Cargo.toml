@@ -1,0 +1,15 @@
+[package]
+name = "c9-policy"
+description = "One declarative policy compiled into XDP rules, cgroup v2 limits and exec-guard signatures"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+c9-classify = { workspace = true, features = ["std"] }
+hex = "0.4.3"
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.154"
+sha2 = "0.11.1"
+toml = "1.1.8"

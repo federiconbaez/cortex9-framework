@@ -1,0 +1,53 @@
+# cortex9 example policy: an edge inference node.
+# One file drives the XDP firewall, the cgroup v2 supervisor and the exec guard.
+
+[meta]
+name = "edge-inference-node"
+generation = 1
+
+[network]
+drop_malformed = true
+drop_fragments = false
+# Management network: always reachable, even if a deny rule overlaps.
+allow_src = ["192.0.2.0/27"]
+deny_src = ["203.0.113.0/24", "198.51.100.7/32"]
+deny_dst_ports = ["tcp/23", "tcp/2375", "udp/11211", "udp/1900"]
+
+[[workload]]
+name = "model-shard-loader"
+memory_max = "256M"
+memory_high = "224M"
+swap_max = "0"
+pids_max = 64
+oom_group = true
+cpu_weight = 100
+psi = { kind = "some", stall_ms = 100, window_ms = 1000 }
+on_pressure = "log"
+expose = ["tcp/8080"]
+
+[exec]
+mode = "enforce"
+watch = ["/opt/cortex9/bin"]
+max_scan_bytes = "64M"
+on_scan_error = "deny"
+trusted_sha256 = []
+
+[[exec.signatures]]
+id = "C9-MINER-STRATUM"
+text = "stratum+tcp://"
+description = "Cryptominer pool URL"
+
+[[exec.signatures]]
+id = "C9-REVSHELL-DEVTCP"
+text = "/dev/tcp/0.0.0.0/"
+description = "Bash reverse shell redirection"
+
+[[exec.signatures]]
+id = "C9-XMRIG-BANNER"
+text = "XMRig/"
+description = "XMRig user agent"
+
+[[exec.signatures]]
+id = "C9-TEST-EICAR-LIKE"
+hex = "43 39 2d 4d 41 4c 57 41 52 45 2d 54 45 53 54 2d 4d 41 52 4b 45 52"
+description = "Synthetic marker used by the benchmark corpus (C9-MALWARE-TEST-MARKER)"
