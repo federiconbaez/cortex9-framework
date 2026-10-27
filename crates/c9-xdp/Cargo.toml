@@ -1,0 +1,23 @@
+[package]
+name = "c9-xdp"
+description = "XDP dynamic firewall loader with hot-reload through BPF maps"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+anyhow = "1.0.104"
+aya = "0.14.0"
+c9-classify = { version = "0.1.0", path = "../c9-classify", features = ["std"] }
+c9-policy = { version = "0.1.0", path = "../c9-policy" }
+libc = "0.2.191"
+
+[features]
+# Tests that load BPF into the running kernel. They need root and fail
+# (never skip) when run without it.
+privileged-tests = []
+
+[[test]]
+name = "kernel"
+required-features = ["privileged-tests"]

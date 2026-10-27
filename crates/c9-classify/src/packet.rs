@@ -122,7 +122,11 @@ pub fn ipv4_checksum(hdr: &[u8]) -> u16 {
         if i == 5 {
             continue;
         }
-        let w = if c.len() == 2 { u16::from_be_bytes([c[0], c[1]]) } else { (c[0] as u16) << 8 };
+        let w = if c.len() == 2 {
+            u16::from_be_bytes([c[0], c[1]])
+        } else {
+            (c[0] as u16) << 8
+        };
         sum += w as u32;
     }
     while sum >> 16 != 0 {
@@ -141,6 +145,7 @@ pub struct Pools {
 /// Generate one adversarial frame: mostly well-formed traffic drawn from the
 /// pools, plus VLAN tags, IP options, fragments, odd ethertypes, bad
 /// versions, bad IHL, short totals and truncation at every boundary.
+#[allow(clippy::field_reassign_with_default)]
 pub fn random_frame(rng: &mut SplitMix64, pools: &Pools) -> Vec<u8> {
     let mut s = FrameSpec::default();
     s.src = if !pools.srcs.is_empty() && rng.chance(3, 4) {
@@ -169,9 +174,9 @@ pub fn random_frame(rng: &mut SplitMix64, pools: &Pools) -> Vec<u8> {
     }
     if rng.chance(1, 8) {
         s.frag = match rng.below(3) {
-            0 => 0x2000,                                   // MF, offset 0
-            1 => (rng.next_u64() as u16 & 0x1fff).max(1),  // non-first
-            _ => 0x4000,                                   // DF only
+            0 => 0x2000,                                  // MF, offset 0
+            1 => (rng.next_u64() as u16 & 0x1fff).max(1), // non-first
+            _ => 0x4000,                                  // DF only
         };
     }
     if rng.chance(1, 20) {
@@ -181,14 +186,18 @@ pub fn random_frame(rng: &mut SplitMix64, pools: &Pools) -> Vec<u8> {
     let mut f = s.build();
 
     // Mutations that the parser must survive.
-    let l3 = if s.vlan.is_some() { ETH_HLEN + 4 } else { ETH_HLEN };
+    let l3 = if s.vlan.is_some() {
+        ETH_HLEN + 4
+    } else {
+        ETH_HLEN
+    };
     match rng.below(12) {
         0 => {
             let cut = rng.below(f.len() as u64 + 1) as usize;
             f.truncate(cut);
         }
         1 if f.len() > l3 => f[l3] = (rng.below(16) as u8) << 4 | (f[l3] & 0x0f), // version
-        2 if f.len() > l3 => f[l3] = (f[l3] & 0xf0) | rng.below(16) as u8,       // IHL
+        2 if f.len() > l3 => f[l3] = (f[l3] & 0xf0) | rng.below(16) as u8,        // IHL
         3 if f.len() > l3 + 3 => {
             let t = rng.below(80) as u16; // tot_len possibly < ihl
             f[l3 + 2..l3 + 4].copy_from_slice(&t.to_be_bytes());

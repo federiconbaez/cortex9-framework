@@ -3,13 +3,14 @@ resolver = "2"
 members = [
     "crates/c9-classify",
     "crates/c9-policy",
+    "crates/c9-xdp",
 ]
 
 [workspace.package]
 version = "0.1.0"
 edition = "2021"
 license = "Apache-2.0"
-rust-version = "1.85"
+rust-version = "1.87"
 repository = "https://github.com/federiconbaez/cortex9-framework"
 
 [workspace.dependencies]

@@ -53,7 +53,10 @@ impl Reason {
     pub const fn is_drop(self) -> bool {
         matches!(
             self,
-            Reason::DropDenySrc | Reason::DropDenyPort | Reason::DropMalformed | Reason::DropFragment
+            Reason::DropDenySrc
+                | Reason::DropDenyPort
+                | Reason::DropMalformed
+                | Reason::DropFragment
         )
     }
 
@@ -92,7 +95,10 @@ impl Flags {
         (self.drop_malformed as u32) | ((self.drop_fragments as u32) << 1)
     }
     pub const fn from_bits(b: u32) -> Flags {
-        Flags { drop_malformed: b & 1 != 0, drop_fragments: b & 2 != 0 }
+        Flags {
+            drop_malformed: b & 1 != 0,
+            drop_fragments: b & 2 != 0,
+        }
     }
 }
 
@@ -110,12 +116,15 @@ impl Prefix {
         if len > 32 {
             return None;
         }
-        Some(Prefix { addr: addr & mask(len), len })
+        Some(Prefix {
+            addr: addr & mask(len),
+            len,
+        })
     }
     pub const fn addr(self) -> u32 {
         self.addr
     }
-    pub const fn len(self) -> u8 {
+    pub const fn prefix_len(self) -> u8 {
         self.len
     }
     pub const fn contains(self, ip: u32) -> bool {
@@ -166,7 +175,11 @@ fn be32(p: &[u8], off: usize) -> Option<u32> {
 /// outside `pkt`, never allocates.
 pub fn classify<R: Rules + ?Sized>(pkt: &[u8], rules: &R) -> Reason {
     let flags = rules.flags();
-    let malformed = if flags.drop_malformed { Reason::DropMalformed } else { Reason::PassMalformed };
+    let malformed = if flags.drop_malformed {
+        Reason::DropMalformed
+    } else {
+        Reason::PassMalformed
+    };
 
     let mut l3 = ETH_HLEN;
     let mut ethertype = match be16(pkt, 12) {
@@ -223,7 +236,11 @@ pub fn classify<R: Rules + ?Sized>(pkt: &[u8], rules: &R) -> Reason {
     let more = frag & 0x2000 != 0;
     if offset != 0 {
         // Non-first fragment: carries no L4 header.
-        return if flags.drop_fragments { Reason::DropFragment } else { Reason::PassFragment };
+        return if flags.drop_fragments {
+            Reason::DropFragment
+        } else {
+            Reason::PassFragment
+        };
     }
     if more && flags.drop_fragments {
         return Reason::DropFragment;
@@ -299,7 +316,9 @@ impl<const N: usize> Rules for StaticRules<N> {
         self.deny[..self.n_deny].iter().any(|p| p.contains(ip))
     }
     fn port_denied(&self, proto: u8, port: u16) -> bool {
-        self.ports[..self.n_ports].iter().any(|&(pr, po)| pr == proto && po == port)
+        self.ports[..self.n_ports]
+            .iter()
+            .any(|&(pr, po)| pr == proto && po == port)
     }
     fn flags(&self) -> Flags {
         self.flags
@@ -318,8 +337,14 @@ pub mod vectors {
     pub fn rules(flags: Flags) -> StaticRules<4> {
         let mut r = StaticRules::new(flags);
         // Capacity 4 is enough; these cannot fail.
-        let _ = r.deny(Prefix { addr: DENY_SRC, len: 24 });
-        let _ = r.allow(Prefix { addr: ALLOW_SRC, len: 25 });
+        let _ = r.deny(Prefix {
+            addr: DENY_SRC,
+            len: 24,
+        });
+        let _ = r.allow(Prefix {
+            addr: ALLOW_SRC,
+            len: 25,
+        });
         let _ = r.deny_port(IPPROTO_TCP, DENY_PORT);
         r
     }
@@ -355,20 +380,87 @@ pub mod vectors {
     }
 
     pub const CASES: [Case; 8] = [
-        Case { name: "deny-src", src: DENY_SRC | 7, proto: IPPROTO_UDP, dport: 53, frag: 0, truncate_to: 0, expect: Reason::DropDenySrc },
-        Case { name: "allow-hole", src: ALLOW_SRC | 9, proto: IPPROTO_TCP, dport: DENY_PORT, frag: 0, truncate_to: 0, expect: Reason::PassAllowSrc },
-        Case { name: "deny-port", src: 0x0A00_0002, proto: IPPROTO_TCP, dport: DENY_PORT, frag: 0, truncate_to: 0, expect: Reason::DropDenyPort },
-        Case { name: "udp-same-port", src: 0x0A00_0002, proto: IPPROTO_UDP, dport: DENY_PORT, frag: 0, truncate_to: 0, expect: Reason::PassDefault },
-        Case { name: "default", src: 0x0A00_0002, proto: IPPROTO_TCP, dport: 443, frag: 0, truncate_to: 0, expect: Reason::PassDefault },
-        Case { name: "non-first-fragment", src: 0x0A00_0002, proto: IPPROTO_TCP, dport: DENY_PORT, frag: 0x0010, truncate_to: 0, expect: Reason::DropFragment },
-        Case { name: "tiny-first-fragment", src: 0x0A00_0002, proto: IPPROTO_TCP, dport: DENY_PORT, frag: 0, truncate_to: ETH_HLEN + IPV4_MIN_HLEN + 2, expect: Reason::DropMalformed },
-        Case { name: "truncated-ip", src: 0x0A00_0002, proto: IPPROTO_TCP, dport: 443, frag: 0, truncate_to: ETH_HLEN + 10, expect: Reason::DropMalformed },
+        Case {
+            name: "deny-src",
+            src: DENY_SRC | 7,
+            proto: IPPROTO_UDP,
+            dport: 53,
+            frag: 0,
+            truncate_to: 0,
+            expect: Reason::DropDenySrc,
+        },
+        Case {
+            name: "allow-hole",
+            src: ALLOW_SRC | 9,
+            proto: IPPROTO_TCP,
+            dport: DENY_PORT,
+            frag: 0,
+            truncate_to: 0,
+            expect: Reason::PassAllowSrc,
+        },
+        Case {
+            name: "deny-port",
+            src: 0x0A00_0002,
+            proto: IPPROTO_TCP,
+            dport: DENY_PORT,
+            frag: 0,
+            truncate_to: 0,
+            expect: Reason::DropDenyPort,
+        },
+        Case {
+            name: "udp-same-port",
+            src: 0x0A00_0002,
+            proto: IPPROTO_UDP,
+            dport: DENY_PORT,
+            frag: 0,
+            truncate_to: 0,
+            expect: Reason::PassDefault,
+        },
+        Case {
+            name: "default",
+            src: 0x0A00_0002,
+            proto: IPPROTO_TCP,
+            dport: 443,
+            frag: 0,
+            truncate_to: 0,
+            expect: Reason::PassDefault,
+        },
+        Case {
+            name: "non-first-fragment",
+            src: 0x0A00_0002,
+            proto: IPPROTO_TCP,
+            dport: DENY_PORT,
+            frag: 0x0010,
+            truncate_to: 0,
+            expect: Reason::DropFragment,
+        },
+        Case {
+            name: "tiny-first-fragment",
+            src: 0x0A00_0002,
+            proto: IPPROTO_TCP,
+            dport: DENY_PORT,
+            frag: 0,
+            truncate_to: ETH_HLEN + IPV4_MIN_HLEN + 2,
+            expect: Reason::DropMalformed,
+        },
+        Case {
+            name: "truncated-ip",
+            src: 0x0A00_0002,
+            proto: IPPROTO_TCP,
+            dport: 443,
+            frag: 0,
+            truncate_to: ETH_HLEN + 10,
+            expect: Reason::DropMalformed,
+        },
     ];
 
     /// Runs every vector with `drop_malformed` and `drop_fragments` set.
     /// Returns the number of failures (0 = all good).
     pub fn run_all() -> usize {
-        let rules = rules(Flags { drop_malformed: true, drop_fragments: true });
+        let rules = rules(Flags {
+            drop_malformed: true,
+            drop_fragments: true,
+        });
         let mut failures = 0;
         let mut buf = [0u8; 64];
         for c in CASES.iter() {

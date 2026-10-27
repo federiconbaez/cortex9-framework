@@ -196,7 +196,11 @@ pub struct PortRule {
 
 impl fmt::Display for PortRule {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let p = if self.proto == IPPROTO_TCP { "tcp" } else { "udp" };
+        let p = if self.proto == IPPROTO_TCP {
+            "tcp"
+        } else {
+            "udp"
+        };
         write!(f, "{p}/{}", self.port)
     }
 }
@@ -214,7 +218,10 @@ pub struct NetworkPlan {
 
 impl NetworkPlan {
     pub fn flags(&self) -> Flags {
-        Flags { drop_malformed: self.drop_malformed, drop_fragments: self.drop_fragments }
+        Flags {
+            drop_malformed: self.drop_malformed,
+            drop_fragments: self.drop_fragments,
+        }
     }
 }
 
@@ -226,7 +233,9 @@ impl Rules for NetworkPlan {
         self.deny.iter().any(|p| p.contains(ip))
     }
     fn port_denied(&self, proto: u8, port: u16) -> bool {
-        self.deny_ports.binary_search(&PortRule { proto, port }).is_ok()
+        self.deny_ports
+            .binary_search(&PortRule { proto, port })
+            .is_ok()
     }
     fn flags(&self) -> Flags {
         NetworkPlan::flags(self)
@@ -287,7 +296,9 @@ pub struct ExecPlan {
 
 impl ExecPlan {
     pub fn is_trusted(&self, sha256_hex: &str) -> bool {
-        self.trusted_sha256.binary_search_by(|h| h.as_str().cmp(sha256_hex)).is_ok()
+        self.trusted_sha256
+            .binary_search_by(|h| h.as_str().cmp(sha256_hex))
+            .is_ok()
     }
 }
 
@@ -353,10 +364,20 @@ struct Diags(Vec<Diagnostic>);
 
 impl Diags {
     fn err(&mut self, code: &'static str, path: impl Into<String>, msg: impl Into<String>) {
-        self.0.push(Diagnostic { severity: Severity::Error, code, path: path.into(), message: msg.into() });
+        self.0.push(Diagnostic {
+            severity: Severity::Error,
+            code,
+            path: path.into(),
+            message: msg.into(),
+        });
     }
     fn warn(&mut self, code: &'static str, path: impl Into<String>, msg: impl Into<String>) {
-        self.0.push(Diagnostic { severity: Severity::Warning, code, path: path.into(), message: msg.into() });
+        self.0.push(Diagnostic {
+            severity: Severity::Warning,
+            code,
+            path: path.into(),
+            message: msg.into(),
+        });
     }
     fn has_errors(&self) -> bool {
         self.0.iter().any(|d| d.severity == Severity::Error)
@@ -390,32 +411,48 @@ pub fn compile(src: &str) -> Result<Compiled, Vec<Diagnostic>> {
         return Err(d.0);
     }
     Ok(Compiled {
-        plan: Plan { name: file.meta.name, generation: file.meta.generation, network, workloads, exec },
+        plan: Plan {
+            name: file.meta.name,
+            generation: file.meta.generation,
+            network,
+            workloads,
+            exec,
+        },
         warnings: d.0,
     })
 }
 
 pub fn parse_cidr(s: &str) -> Result<Prefix, String> {
     let (ip, len) = match s.split_once('/') {
-        Some((ip, len)) => (ip, len.parse::<u8>().map_err(|_| format!("bad prefix length in {s:?}"))?),
+        Some((ip, len)) => (
+            ip,
+            len.parse::<u8>()
+                .map_err(|_| format!("bad prefix length in {s:?}"))?,
+        ),
         None => (s, 32),
     };
-    let addr: std::net::Ipv4Addr = ip.parse().map_err(|_| format!("bad IPv4 address in {s:?}"))?;
+    let addr: std::net::Ipv4Addr = ip
+        .parse()
+        .map_err(|_| format!("bad IPv4 address in {s:?}"))?;
     Prefix::new(u32::from(addr), len).ok_or_else(|| format!("prefix length > 32 in {s:?}"))
 }
 
 pub fn format_prefix(p: &Prefix) -> String {
-    format!("{}/{}", std::net::Ipv4Addr::from(p.addr()), p.len())
+    format!("{}/{}", std::net::Ipv4Addr::from(p.addr()), p.prefix_len())
 }
 
 pub fn parse_port(s: &str) -> Result<PortRule, String> {
-    let (proto, port) = s.split_once('/').ok_or_else(|| format!("expected tcp/N or udp/N, got {s:?}"))?;
+    let (proto, port) = s
+        .split_once('/')
+        .ok_or_else(|| format!("expected tcp/N or udp/N, got {s:?}"))?;
     let proto = match proto {
         "tcp" => IPPROTO_TCP,
         "udp" => IPPROTO_UDP,
         _ => return Err(format!("unknown protocol in {s:?}")),
     };
-    let port = port.parse::<u16>().map_err(|_| format!("bad port in {s:?}"))?;
+    let port = port
+        .parse::<u16>()
+        .map_err(|_| format!("bad port in {s:?}"))?;
     Ok(PortRule { proto, port })
 }
 
@@ -432,7 +469,9 @@ pub fn parse_size(s: &str) -> Result<Option<u64>, String> {
         _ => (t, 1),
     };
     let n: u64 = num.parse().map_err(|_| format!("bad size {s:?}"))?;
-    n.checked_mul(mul).map(Some).ok_or_else(|| format!("size overflows u64: {s:?}"))
+    n.checked_mul(mul)
+        .map(Some)
+        .ok_or_else(|| format!("size overflows u64: {s:?}"))
 }
 
 fn compile_prefixes(list: &[String], path: &str, d: &mut Diags) -> Vec<Prefix> {
@@ -471,34 +510,73 @@ fn compile_network(n: &NetworkSpec, d: &mut Diags) -> NetworkPlan {
     deny_ports.dedup();
 
     if allow.len() > XDP_MAX_PREFIXES || deny.len() > XDP_MAX_PREFIXES {
-        d.err("C9E007", "network", format!("more than {XDP_MAX_PREFIXES} prefixes do not fit the XDP LPM tries"));
+        d.err(
+            "C9E007",
+            "network",
+            format!("more than {XDP_MAX_PREFIXES} prefixes do not fit the XDP LPM tries"),
+        );
     }
     if deny_ports.len() > XDP_MAX_PORTS {
-        d.err("C9E007", "network.deny_dst_ports", format!("more than {XDP_MAX_PORTS} ports do not fit the XDP map"));
+        d.err(
+            "C9E007",
+            "network.deny_dst_ports",
+            format!("more than {XDP_MAX_PORTS} ports do not fit the XDP map"),
+        );
     }
     for p in &deny {
         if let Some(a) = allow.iter().find(|a| a.covers(*p)) {
             d.warn(
                 "C9W101",
                 "network.deny_src",
-                format!("{} can never match: allow_src {} covers it", format_prefix(p), format_prefix(a)),
+                format!(
+                    "{} can never match: allow_src {} covers it",
+                    format_prefix(p),
+                    format_prefix(a)
+                ),
             );
         } else if let Some(o) = deny.iter().find(|o| *o != p && o.covers(*p)) {
-            d.warn("C9W102", "network.deny_src", format!("{} is redundant with {}", format_prefix(p), format_prefix(o)));
+            d.warn(
+                "C9W102",
+                "network.deny_src",
+                format!(
+                    "{} is redundant with {}",
+                    format_prefix(p),
+                    format_prefix(o)
+                ),
+            );
         }
     }
-    NetworkPlan { allow, deny, deny_ports, drop_malformed: n.drop_malformed, drop_fragments: n.drop_fragments }
+    NetworkPlan {
+        allow,
+        deny,
+        deny_ports,
+        drop_malformed: n.drop_malformed,
+        drop_fragments: n.drop_fragments,
+    }
 }
 
 fn compile_workloads(ws: &[WorkloadSpec], d: &mut Diags) -> Vec<WorkloadPlan> {
     let mut out = Vec::new();
     for (i, w) in ws.iter().enumerate() {
         let path = format!("workload[{i}]");
-        if w.name.is_empty() || !w.name.chars().all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_') {
-            d.err("C9E010", format!("{path}.name"), "name must be [A-Za-z0-9_-]+ (it becomes a cgroup directory)");
+        if w.name.is_empty()
+            || !w
+                .name
+                .chars()
+                .all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_')
+        {
+            d.err(
+                "C9E010",
+                format!("{path}.name"),
+                "name must be [A-Za-z0-9_-]+ (it becomes a cgroup directory)",
+            );
         }
         if ws[..i].iter().any(|o| o.name == w.name) {
-            d.err("C9E005", format!("{path}.name"), format!("duplicate workload {:?}", w.name));
+            d.err(
+                "C9E005",
+                format!("{path}.name"),
+                format!("duplicate workload {:?}", w.name),
+            );
         }
         let size = |s: &str, field: &str, d: &mut Diags| match parse_size(s) {
             Ok(v) => v,
@@ -508,22 +586,44 @@ fn compile_workloads(ws: &[WorkloadSpec], d: &mut Diags) -> Vec<WorkloadPlan> {
             }
         };
         let memory_max = size(&w.memory_max, "memory_max", d);
-        let memory_high = w.memory_high.as_deref().and_then(|s| size(s, "memory_high", d));
+        let memory_high = w
+            .memory_high
+            .as_deref()
+            .and_then(|s| size(s, "memory_high", d));
         let swap_max = size(&w.swap_max, "swap_max", d);
         if let (Some(h), Some(m)) = (memory_high, memory_max) {
             if h > m {
-                d.err("C9E003", format!("{path}.memory_high"), "memory_high above memory_max never throttles");
+                d.err(
+                    "C9E003",
+                    format!("{path}.memory_high"),
+                    "memory_high above memory_max never throttles",
+                );
             }
         }
-        let psi = w.psi.as_ref().map(|p| PsiPlan { kind: p.kind, stall_us: p.stall_ms * 1000, window_us: p.window_ms * 1000 });
+        let psi = w.psi.as_ref().map(|p| PsiPlan {
+            kind: p.kind,
+            stall_us: p.stall_ms * 1000,
+            window_us: p.window_ms * 1000,
+        });
         if let Some(p) = &psi {
             // Kernel bounds (Documentation/accounting/psi.rst): 500ms..10s window.
-            if !(500_000..=10_000_000).contains(&p.window_us) || p.stall_us == 0 || p.stall_us > p.window_us {
-                d.err("C9E009", format!("{path}.psi"), "window must be 500..10000 ms and 0 < stall <= window");
+            if !(500_000..=10_000_000).contains(&p.window_us)
+                || p.stall_us == 0
+                || p.stall_us > p.window_us
+            {
+                d.err(
+                    "C9E009",
+                    format!("{path}.psi"),
+                    "window must be 500..10000 ms and 0 < stall <= window",
+                );
             }
         }
         if w.on_pressure != PressureAction::Log && psi.is_none() {
-            d.err("C9E011", format!("{path}.on_pressure"), "freeze/kill on pressure needs a psi trigger");
+            d.err(
+                "C9E011",
+                format!("{path}.on_pressure"),
+                "freeze/kill on pressure needs a psi trigger",
+            );
         }
         let mut expose: Vec<PortRule> = w
             .expose
@@ -565,7 +665,11 @@ fn compile_workloads(ws: &[WorkloadSpec], d: &mut Diags) -> Vec<WorkloadPlan> {
 fn compile_exec(e: &ExecSpec, d: &mut Diags) -> ExecPlan {
     for (i, w) in e.watch.iter().enumerate() {
         if !w.starts_with('/') {
-            d.err("C9E006", format!("exec.watch[{i}]"), "watch paths must be absolute");
+            d.err(
+                "C9E006",
+                format!("exec.watch[{i}]"),
+                "watch paths must be absolute",
+            );
         }
     }
     let max_scan_bytes = match parse_size(&e.max_scan_bytes) {
@@ -580,7 +684,11 @@ fn compile_exec(e: &ExecSpec, d: &mut Diags) -> ExecPlan {
     for (i, h) in e.trusted_sha256.iter().enumerate() {
         let h = h.to_ascii_lowercase();
         if h.len() != 64 || !h.bytes().all(|b| b.is_ascii_hexdigit()) {
-            d.err("C9E008", format!("exec.trusted_sha256[{i}]"), "expected 64 hex digits");
+            d.err(
+                "C9E008",
+                format!("exec.trusted_sha256[{i}]"),
+                "expected 64 hex digits",
+            );
         } else {
             trusted.push(h);
         }
@@ -605,18 +713,37 @@ fn compile_exec(e: &ExecSpec, d: &mut Diags) -> ExecPlan {
             }
         };
         if bytes.len() < MIN_SIGNATURE_LEN {
-            d.err("C9E004", &path, format!("signatures shorter than {MIN_SIGNATURE_LEN} bytes cause false positives"));
+            d.err(
+                "C9E004",
+                &path,
+                format!("signatures shorter than {MIN_SIGNATURE_LEN} bytes cause false positives"),
+            );
         }
         if sigs.iter().any(|o| o.id == s.id) {
-            d.err("C9E005", &path, format!("duplicate signature id {:?}", s.id));
+            d.err(
+                "C9E005",
+                &path,
+                format!("duplicate signature id {:?}", s.id),
+            );
         }
-        sigs.push(Signature { id: s.id.clone(), bytes, description: s.description.clone() });
+        sigs.push(Signature {
+            id: s.id.clone(),
+            bytes,
+            description: s.description.clone(),
+        });
     }
     sigs.sort_by(|a, b| a.id.cmp(&b.id));
     let mut watch = e.watch.clone();
     watch.sort();
     watch.dedup();
-    ExecPlan { mode: e.mode, watch, max_scan_bytes, on_scan_error: e.on_scan_error, trusted_sha256: trusted, signatures: sigs }
+    ExecPlan {
+        mode: e.mode,
+        watch,
+        max_scan_bytes,
+        on_scan_error: e.on_scan_error,
+        trusted_sha256: trusted,
+        signatures: sigs,
+    }
 }
 
 /// Contradictions that only appear when the pillars are looked at together.
@@ -627,7 +754,10 @@ fn cross_check(net: &NetworkPlan, ws: &[WorkloadPlan], d: &mut Diags) {
                 d.err(
                     "C9E002",
                     format!("workload[{i}].expose"),
-                    format!("workload {:?} exposes {p} but network.deny_dst_ports drops it at XDP", w.name),
+                    format!(
+                        "workload {:?} exposes {p} but network.deny_dst_ports drops it at XDP",
+                        w.name
+                    ),
                 );
             }
         }
@@ -642,7 +772,9 @@ mod prefixes {
     }
     pub fn deserialize<'de, D: Deserializer<'de>>(d: D) -> Result<Vec<Prefix>, D::Error> {
         let v: Vec<String> = Vec::deserialize(d)?;
-        v.iter().map(|s| parse_cidr(s).map_err(serde::de::Error::custom)).collect()
+        v.iter()
+            .map(|s| parse_cidr(s).map_err(serde::de::Error::custom))
+            .collect()
     }
 }
 

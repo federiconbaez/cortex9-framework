@@ -5,8 +5,18 @@ use proptest::prelude::*;
 
 /// Reference model written independently of `engine.rs`, in the most
 /// obvious style, to cross-check the optimised parser.
-fn reference(pkt: &[u8], allow: &[Prefix], deny: &[Prefix], ports: &[(u8, u16)], f: Flags) -> Reason {
-    let bad = if f.drop_malformed { Reason::DropMalformed } else { Reason::PassMalformed };
+fn reference(
+    pkt: &[u8],
+    allow: &[Prefix],
+    deny: &[Prefix],
+    ports: &[(u8, u16)],
+    f: Flags,
+) -> Reason {
+    let bad = if f.drop_malformed {
+        Reason::DropMalformed
+    } else {
+        Reason::PassMalformed
+    };
     if pkt.len() < 14 {
         return Reason::PassNotIpv4;
     }
@@ -39,7 +49,11 @@ fn reference(pkt: &[u8], allow: &[Prefix], deny: &[Prefix], ports: &[(u8, u16)],
     }
     let frag = u16::from_be_bytes([ip[6], ip[7]]);
     if frag & 0x1fff != 0 {
-        return if f.drop_fragments { Reason::DropFragment } else { Reason::PassFragment };
+        return if f.drop_fragments {
+            Reason::DropFragment
+        } else {
+            Reason::PassFragment
+        };
     }
     if frag & 0x2000 != 0 && f.drop_fragments {
         return Reason::DropFragment;
