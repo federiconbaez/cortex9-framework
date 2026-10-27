@@ -1,0 +1,27 @@
+[package]
+name = "cortex9"
+description = "cortex9 command line: one policy, four enforcement points"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[[bin]]
+name = "cortex9"
+path = "src/main.rs"
+
+[dependencies]
+anyhow = "1"
+c9-cgroup = { workspace = true }
+c9-classify = { workspace = true, features = ["std"] }
+c9-execguard = { workspace = true }
+c9-policy = { workspace = true }
+c9-xdp = { workspace = true }
+clap = { version = "4", features = ["derive"] }
+hex = "0.4.3"
+libc = "0.2.191"
+serde_json = "1"
+
+[[bin]]
+name = "c9-xdp-hold"
+path = "src/bin/c9-xdp-hold.rs"

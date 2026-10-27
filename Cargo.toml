@@ -6,6 +6,7 @@ members = [
     "crates/c9-xdp",
     "crates/c9-cgroup",
     "crates/c9-execguard",
+    "crates/cortex9",
 ]
 
 [workspace.package]
