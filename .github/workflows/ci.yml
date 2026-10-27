@@ -1,0 +1,115 @@
+name: ci
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+env:
+  CARGO_TERM_COLOR: always
+  RUSTFLAGS: -D warnings
+jobs:
+  userspace:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 1.87.0
+          components: rustfmt, clippy
+      - name: fmt
+        run: cargo fmt --all -- --check
+      - name: clippy
+        run: cargo clippy --workspace --all-targets --features c9-classify/std -- -D warnings
+      - name: test (unprivileged)
+        run: cargo test --workspace --features c9-classify/std
+      - name: CWE matrix
+        run: python3 cwe/run.py results/cwe.json
+      - name: upload CWE
+        uses: actions/upload-artifact@v4
+        with:
+          name: cwe-matrix
+          path: results/cwe.json
+
+  xdp:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 1.87.0
+      - name: apt
+        run: sudo apt-get update -qq && sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq clang llvm libelf-dev libbpf-dev nftables iproute2
+      - name: build
+        run: cargo build --release -p c9-xdp -p cortex9 --features c9-xdp/privileged-tests
+      - name: privileged tests
+        run: sudo -E env "PATH=$PATH" cargo test -p c9-xdp --features privileged-tests -- --test-threads=1
+      - name: veth bench
+        run: sudo ./benches/xdp_veth.sh results/xdp-bench.json
+      - name: upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: xdp-bench
+          path: results/xdp-bench.json
+
+  cgroup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 1.87.0
+      - name: build
+        run: cargo build --release -p c9-cgroup --bin c9-hog
+      - name: privileged tests
+        run: sudo -E env "PATH=$PATH" cargo test -p c9-cgroup --features privileged-tests -- --test-threads=1
+      - name: oom bench
+        run: sudo ./benches/cgroup_oom.sh results/cgroup-bench.json
+      - name: upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: cgroup-bench
+          path: results/cgroup-bench.json
+
+  execguard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 1.87.0
+      - name: test engine
+        run: cargo test -p c9-execguard
+      - name: privileged tests
+        run: sudo -E env "PATH=$PATH" cargo test -p c9-execguard --features privileged-tests -- --test-threads=1 --nocapture | tee results/exec-fanotify.txt
+      - name: upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: exec-fanotify
+          path: results/exec-fanotify.txt
+
+  rust-kernel:
+    runs-on: ubuntu-latest
+    # Full kernel build is ~10 min; keep it but fail loudly on any step.
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 1.87.0
+          components: rust-src
+      - name: apt
+        run: sudo apt-get update -qq && sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq clang lld llvm flex bison bc libelf-dev libssl-dev busybox-static cpio qemu-system-x86
+      - name: bindgen
+        run: cargo install --locked bindgen-cli
+      - name: build kernel
+        run: kernel/build-kernel.sh "$HOME/kbuild"
+      - name: build module
+        run: make -C kernel KDIR="$HOME/kbuild/out" LLVM=1
+      - name: static checker
+        run: RUSTFLAGS="-C target-feature=+crt-static" cargo build --release -p c9-classify --features std --bin c9-kmod-check --target x86_64-unknown-linux-gnu
+      - name: qemu differential
+        run: kernel/qemu-test.sh "$HOME/kbuild/out/arch/x86/boot/bzImage" kernel/c9_classifier.ko target/x86_64-unknown-linux-gnu/release/c9-kmod-check results/kmod.json
+      - name: upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: kmod
+          path: results/kmod.json
