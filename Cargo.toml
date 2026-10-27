@@ -5,6 +5,7 @@ members = [
     "crates/c9-policy",
     "crates/c9-xdp",
     "crates/c9-cgroup",
+    "crates/c9-execguard",
 ]
 
 [workspace.package]
