@@ -1,0 +1,19 @@
+{
+  "pillar": "rust-kernel",
+  "kernel": "7.2.13",
+  "qemu_accel": "-accel tcg",
+  "agree": 20000,
+  "total": 20000,
+  "seed": 12601449,
+  "verdict_histogram": {
+    "pass_not_ipv4": 1288,
+    "pass_allow_src": 7721,
+    "pass_default": 3280,
+    "drop_deny_src": 3947,
+    "drop_deny_port": 255,
+    "drop_malformed": 3194,
+    "drop_fragment": 315,
+    "pass_malformed": 0,
+    "pass_fragment": 0
+  }
+}

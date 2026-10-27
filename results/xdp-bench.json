@@ -1,0 +1,25 @@
+{
+  "pillar": "xdp",
+  "frames_per_case": 50000,
+  "attach": "peer_netdev_ingress_skb",
+  "nftables": {
+    "recv": 0,
+    "drop": 50000,
+    "drop_rate": 1.0,
+    "sender_pps": 726946
+  },
+  "xdp_deny_src": {
+    "recv": 0,
+    "drop_stat": 50000,
+    "drop_rate": 1.0,
+    "sender_pps": 817399
+  },
+  "xdp_pass": {
+    "recv": 50000,
+    "pass_stat": 50000,
+    "pass_rate": 1.0,
+    "sender_pps": 661674
+  },
+  "reload_avg_us": 1339,
+  "note": "Both on peer (V1) ingress; sender on V0; recv filters UDP dport 0xC909"
+}

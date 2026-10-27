@@ -1,0 +1,234 @@
+{
+  "pillar": "rust-kernel/cwe-matrix",
+  "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)",
+  "gcc": "gcc (Debian 14.2.0-19) 14.2.0",
+  "summary": {
+    "cases": 15,
+    "rust_compile_time": 9,
+    "rust_runtime_check": 4,
+    "rust_not_prevented": 2,
+    "c_accepted_by_gcc_wall_wextra": 15,
+    "c_cases_with_any_warning": 4,
+    "c_detected_by_sanitizers_at_runtime": 10
+  },
+  "cases": [
+    {
+      "case": "CWE-120-copy-without-size-check",
+      "c": {
+        "compiles": true,
+        "warnings": 0,
+        "sanitizer": "address,undefined",
+        "sanitizer_detects": true
+      },
+      "rust": {
+        "outcome": "runtime_check",
+        "panic": "copy_from_slice: source slice length (16) does not match destination slice length (8)"
+      }
+    },
+    {
+      "case": "CWE-125-oob-read-header-length",
+      "c": {
+        "compiles": true,
+        "warnings": 0,
+        "sanitizer": "address,undefined",
+        "sanitizer_detects": true
+      },
+      "rust": {
+        "outcome": "runtime_check",
+        "panic": "index out of bounds: the len is 8 but the index is 31"
+      }
+    },
+    {
+      "case": "CWE-134-format-string",
+      "c": {
+        "compiles": true,
+        "warnings": 0,
+        "sanitizer": "address,undefined",
+        "sanitizer_detects": false
+      },
+      "rust": {
+        "outcome": "compile_time",
+        "errors": [],
+        "first_error": "error: format argument must be a string literal"
+      }
+    },
+    {
+      "case": "CWE-190-integer-overflow-size",
+      "c": {
+        "compiles": true,
+        "warnings": 0,
+        "sanitizer": "address,undefined",
+        "sanitizer_detects": false
+      },
+      "rust": {
+        "outcome": "runtime_check",
+        "panic": "attempt to add with overflow"
+      }
+    },
+    {
+      "case": "CWE-362-data-race",
+      "c": {
+        "compiles": true,
+        "warnings": 0,
+        "sanitizer": "thread",
+        "sanitizer_detects": true
+      },
+      "rust": {
+        "outcome": "compile_time",
+        "errors": [
+          "E0499"
+        ],
+        "first_error": "error[E0499]: cannot borrow `counter` as mutable more than once at a time"
+      }
+    },
+    {
+      "case": "CWE-367-toctou",
+      "c": {
+        "compiles": true,
+        "warnings": 0,
+        "sanitizer": "address,undefined",
+        "sanitizer_detects": false
+      },
+      "rust": {
+        "outcome": "not_prevented",
+        "exit": 0
+      }
+    },
+    {
+      "case": "CWE-401-memory-leak",
+      "c": {
+        "compiles": true,
+        "warnings": 0,
+        "sanitizer": "address,undefined",
+        "sanitizer_detects": true
+      },
+      "rust": {
+        "outcome": "not_prevented",
+        "exit": 0
+      }
+    },
+    {
+      "case": "CWE-415-double-free",
+      "c": {
+        "compiles": true,
+        "warnings": 1,
+        "sanitizer": "address,undefined",
+        "sanitizer_detects": false
+      },
+      "rust": {
+        "outcome": "compile_time",
+        "errors": [
+          "E0382"
+        ],
+        "first_error": "error[E0382]: use of moved value: `p`"
+      }
+    },
+    {
+      "case": "CWE-416-use-after-free",
+      "c": {
+        "compiles": true,
+        "warnings": 1,
+        "sanitizer": "address,undefined",
+        "sanitizer_detects": true
+      },
+      "rust": {
+        "outcome": "compile_time",
+        "errors": [
+          "E0382"
+        ],
+        "first_error": "error[E0382]: borrow of moved value: `p`"
+      }
+    },
+    {
+      "case": "CWE-457-uninitialized-variable",
+      "c": {
+        "compiles": true,
+        "warnings": 0,
+        "sanitizer": "address,undefined",
+        "sanitizer_detects": false
+      },
+      "rust": {
+        "outcome": "compile_time",
+        "errors": [
+          "E0381"
+        ],
+        "first_error": "error[E0381]: used binding `x` is possibly-uninitialized"
+      }
+    },
+    {
+      "case": "CWE-476-null-deref",
+      "c": {
+        "compiles": true,
+        "warnings": 0,
+        "sanitizer": "address,undefined",
+        "sanitizer_detects": true
+      },
+      "rust": {
+        "outcome": "compile_time",
+        "errors": [
+          "E0614"
+        ],
+        "first_error": "error[E0614]: type `Option<&i32>` cannot be dereferenced"
+      }
+    },
+    {
+      "case": "CWE-562-return-stack-address",
+      "c": {
+        "compiles": true,
+        "warnings": 1,
+        "sanitizer": "address,undefined",
+        "sanitizer_detects": true
+      },
+      "rust": {
+        "outcome": "compile_time",
+        "errors": [
+          "E0515"
+        ],
+        "first_error": "error[E0515]: cannot return reference to local variable `x`"
+      }
+    },
+    {
+      "case": "CWE-787-oob-write-constant",
+      "c": {
+        "compiles": true,
+        "warnings": 0,
+        "sanitizer": "address,undefined",
+        "sanitizer_detects": true
+      },
+      "rust": {
+        "outcome": "compile_time",
+        "errors": [],
+        "first_error": "error: this operation will panic at runtime"
+      }
+    },
+    {
+      "case": "CWE-787-oob-write-dynamic",
+      "c": {
+        "compiles": true,
+        "warnings": 0,
+        "sanitizer": "address,undefined",
+        "sanitizer_detects": true
+      },
+      "rust": {
+        "outcome": "runtime_check",
+        "panic": "index out of bounds: the len is 4 but the index is 4"
+      }
+    },
+    {
+      "case": "CWE-843-type-confusion",
+      "c": {
+        "compiles": true,
+        "warnings": 2,
+        "sanitizer": "address,undefined",
+        "sanitizer_detects": true
+      },
+      "rust": {
+        "outcome": "compile_time",
+        "errors": [
+          "E0605"
+        ],
+        "first_error": "error[E0605]: non-primitive cast: `&A` as `&B`"
+      }
+    }
+  ]
+}

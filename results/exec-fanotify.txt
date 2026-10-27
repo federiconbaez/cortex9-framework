@@ -1,0 +1,1 @@
+C9-EXEC-FANOTIFY deny_ms=1.282 allow_ms=1.722 p50_ms=0.151 p99_ms=0.151 events=2

@@ -1,0 +1,9 @@
+{
+  "pillar": "cgroup",
+  "exit_signal_or_code": -9,
+  "oom_kills_in_cgroup": 2,
+  "host_oom_delta": 2,
+  "canary_survived": true,
+  "memory_max_bytes": 134217728,
+  "elapsed_ms": 136
+}
