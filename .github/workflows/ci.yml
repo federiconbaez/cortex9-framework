@@ -16,7 +16,7 @@ jobs:
           toolchain: 1.88.0
           components: rustfmt, clippy
       - name: apt
-        run: sudo apt-get update -qq && sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq clang llvm libelf-dev
+        run: sudo apt-get update -qq && sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq clang llvm libelf-dev libbpf-dev
       - name: fmt
         run: cargo fmt --all -- --check
       - name: clippy
