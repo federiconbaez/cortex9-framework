@@ -3,7 +3,7 @@ use c9_execguard::*;
 use c9_policy::compile;
 use std::io::Write;
 use std::os::unix::fs::PermissionsExt;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 fn plan_with(extra_sig_hex: Option<&str>) -> c9_policy::ExecPlan {
     let mut src = include_str!("../../../policy/cortex9.toml").to_string();
@@ -15,7 +15,7 @@ fn plan_with(extra_sig_hex: Option<&str>) -> c9_policy::ExecPlan {
     compile(&src).unwrap().plan.exec
 }
 
-fn write_bin(dir: &PathBuf, name: &str, body: &[u8]) -> PathBuf {
+fn write_bin(dir: &Path, name: &str, body: &[u8]) -> PathBuf {
     let p = dir.join(name);
     let mut f = std::fs::File::create(&p).unwrap();
     f.write_all(body).unwrap();
