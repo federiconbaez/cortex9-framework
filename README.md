@@ -58,15 +58,15 @@ firewall deniega) se rechaza **antes** de tocar el kernel (`C9E002`).
 
 ### Resultados medidos
 
-Ver [`results/SUMMARY.md`](results/SUMMARY.md) y los JSON de ese directorio.
+Ver [`results/SUMMARY.md (CI run [40808440418](https://github.com/federiconbaez/cortex9-framework/actions/runs/40808440418))`](results/SUMMARY.md (CI run [40808440418](https://github.com/federiconbaez/cortex9-framework/actions/runs/40808440418))) y los JSON de ese directorio.
 Resumen de una corrida local (reproducir con los comandos de abajo):
 
 | Pilar | Resultado |
 |---|---|
 | 1 | 20000/20000 acuerdos en QEMU (kernel 7.2.13); CWE 9 compile_time + 4 runtime_check + 2 not_prevented de 15 |
-| 2 | drop rate XDP = 1.0 (= nftables) sobre 50000 frames; reload avg 1339 µs |
+| 2 | drop rate XDP = 1.0 (= nftables) sobre 50000 frames; reload avg 1577 µs (CI) |
 | 3 | OOM dentro del cgroup, canario vivo, host `oom_kill` delta = kills del memcg |
-| 4 | fanotify p99 decisión 0.151 ms; 0 falsos positivos |
+| 4 | fanotify p99 decisión 0.121 ms (CI); 0 falsos positivos |
 
 ### Reproducir
 
@@ -142,15 +142,15 @@ anything touches the kernel.
 
 ### Measured results
 
-See [`results/SUMMARY.md`](results/SUMMARY.md). One local run (reproduce with
+See [`results/SUMMARY.md (CI run [40808440418](https://github.com/federiconbaez/cortex9-framework/actions/runs/40808440418))`](results/SUMMARY.md (CI run [40808440418](https://github.com/federiconbaez/cortex9-framework/actions/runs/40808440418))). One local run (reproduce with
 the commands above):
 
 | Pillar | Result |
 |---|---|
 | 1 | 20000/20000 QEMU agreements (kernel 7.2.13); CWE 9 / 4 / 2 of 15 |
-| 2 | XDP drop rate 1.0 (= nftables) on 50000 frames; reload avg 1339 µs |
+| 2 | XDP drop rate 1.0 (= nftables) on 50000 frames; reload avg 1577 µs (CI) |
 | 3 | OOM inside the cgroup, canary alive, host `oom_kill` delta = memcg kills |
-| 4 | fanotify decision p99 0.151 ms; 0 false positives |
+| 4 | fanotify decision p99 0.121 ms (CI); 0 false positives |
 
 ### Honest limits
 

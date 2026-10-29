@@ -6,20 +6,20 @@
     "recv": 0,
     "drop": 50000,
     "drop_rate": 1.0,
-    "sender_pps": 726946
+    "sender_pps": 410089
   },
   "xdp_deny_src": {
     "recv": 0,
     "drop_stat": 50000,
     "drop_rate": 1.0,
-    "sender_pps": 817399
+    "sender_pps": 389443
   },
   "xdp_pass": {
     "recv": 50000,
     "pass_stat": 50000,
     "pass_rate": 1.0,
-    "sender_pps": 661674
+    "sender_pps": 253428
   },
-  "reload_avg_us": 1339,
+  "reload_avg_us": 1577,
   "note": "Both on peer (V1) ingress; sender on V0; recv filters UDP dport 0xC909"
 }

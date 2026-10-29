@@ -5,5 +5,5 @@
   "host_oom_delta": 2,
   "canary_survived": true,
   "memory_max_bytes": 134217728,
-  "elapsed_ms": 136
+  "elapsed_ms": 73
 }

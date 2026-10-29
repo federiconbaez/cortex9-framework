@@ -1,1 +1,34 @@
-C9-EXEC-FANOTIFY deny_ms=1.282 allow_ms=1.722 p50_ms=0.151 p99_ms=0.151 events=2
+[1m[32m   Compiling[0m c9-execguard v0.1.0 (/home/runner/work/cortex9-framework/cortex9-framework/crates/c9-execguard)
+[1m[32m    Finished[0m `test` profile [unoptimized + debuginfo] target(s) in 0.68s
+[1m[32m     Running[0m unittests src/lib.rs (target/debug/deps/c9_execguard-26a468128d6b9650)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+[1m[32m     Running[0m tests/engine.rs (target/debug/deps/engine-f974570281f668e6)
+
+running 2 tests
+test blocks_every_seeded_malicious_sample ... ok
+test zero_false_positives_on_benign_corpus ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+[1m[32m     Running[0m tests/kernel.rs (target/debug/deps/kernel-200583c2960afe35)
+
+running 3 tests
+test engine_blocks_signature_and_trusts_allowlist ... ok
+test fanotify_blocks_within_milliseconds ... C9-EXEC-FANOTIFY deny_ms=0.424 allow_ms=1.588 p50_ms=0.121 p99_ms=0.121 events=2
+ok
+test seccomp_unotify_blocks_without_root ... /tmp/c9eg2847/wrap: 2: exec: /tmp/c9eg2847/miner: Operation not permitted
+ok
+ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
+
+[1m[32m   Doc-tests[0m c9_execguard
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
